@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# Hacked together file from the tracelyzer init scripts!
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+DAEMON=/usr/bin/tracelyzer
+DAEMON2=/usr/bin/tracelyzer-conn
+NAME=tracelyzer
+NAME2=tracelyzer-conn
+DESC=tracelyzer
+LOGDIR=/var/log/tracelyzer
+
+PIDDIR=/var/run/tracelyzer
+PIDFILE=$PIDDIR/$NAME.pid
+PIDFILE2=$PIDDIR/$NAME2.pid
+
+. /lib/lsb/init-functions
+
+LOGFILE=$LOGDIR/$NAME.log
+LOGFILE2=$LOGDIR/$NAME2.log
+ERROR_FILE=$LOGDIR/error.log
+DAEMONUSER=appneta
+
+CONF_TRACELYZER=/etc/tracelyzer/tracelyzer.conf
+CONF_CLIENT_PRIV=/etc/tracelyzer/auth_client
+CONF_SERVER_PUB=/etc/tracelyzer/auth_server.pub
+
+COLLECTOR_HOST=incoming.tracelytics.com
+COLLECTOR_PORT_1=443
+COLLECTOR_PORT_2=2222
+
+# Include collector config file (downloaded by appneta-config)
+LISTEN_HOST=0.0.0.0
+LISTEN_PORT=7831 # UDP
+
+TUNNEL_PORT=7831
+
+AUTOSSH_DEBUG=0
+
+DAEMON_OPTS="-c $CONF_TRACELYZER -L $LISTEN_HOST -O $LISTEN_PORT"
+DAEMON2_OPTS="-M 0 -f -vNnC -i $CONF_CLIENT_PRIV -L $TUNNEL_PORT:127.0.0.1:1463 \
+              -o UserKnownHostsFile=$CONF_SERVER_PUB -o StrictHostKeyChecking=yes \
+              -o CheckHostIP=no -o ServerAliveInterval=30 -o ServerAliveCountMax=2 \
+              -o ConnectTimeout=20 -p $COLLECTOR_PORT_1 customer@$COLLECTOR_HOST"
+
+set -e
+
+if [ ! -d $PIDDIR ]; then
+    mkdir -p $PIDDIR
+    chown ${DAEMONUSER}: $PIDDIR
+fi
+
+export AUTOSSH_LOGFILE=$LOGFILE2
+export AUTOSSH_PIDFILE=$PIDFILE2
+export AUTOSSH_GATETIME=0
+export AUTOSSH_DEBUG=$AUTOSSH_DEBUG
+
+# fix potentially wrong file permissions
+chmod 666 /var/lib/tracelyzer/settings 2>/dev/null || true
+
+`$DAEMON2 $DAEMON2_OPTS 1>&0 2>&1 &`
+
+sleep 2
+
+`$DAEMON $DAEMON_OPTS 1>&0 2>&1`
