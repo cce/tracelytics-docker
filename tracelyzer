@@ -18,7 +18,7 @@ PIDFILE2=$PIDDIR/$NAME2.pid
 . /lib/lsb/init-functions
 
 LOGFILE=$LOGDIR/$NAME.log
-LOGFILE2=$LOGDIR/$NAME2.log
+LOGFILE2=/dev/stdout
 ERROR_FILE=$LOGDIR/error.log
 DAEMONUSER=appneta
 
@@ -59,8 +59,8 @@ export AUTOSSH_DEBUG=$AUTOSSH_DEBUG
 # fix potentially wrong file permissions
 chmod 666 /var/lib/tracelyzer/settings 2>/dev/null || true
 
-`$DAEMON2 $DAEMON2_OPTS 1>&0 2>&1 &`
+$DAEMON2 $DAEMON2_OPTS 2>&1 &
 
 sleep 2
 
-`$DAEMON $DAEMON_OPTS 1>&0 2>&1`
+$DAEMON $DAEMON_OPTS 2>&1

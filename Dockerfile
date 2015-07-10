@@ -16,8 +16,8 @@ RUN apt-get -y update
 RUN apt-get -y install liboboe0 liboboe-dev tracelyzer
 
 RUN mkdir -p /var/log/tracelyzer
-RUN touch /var/log/tracelyzer/ssh.status /var/log/tracelyzer/ssh.status.tmp /var/log/tracelyzer/tracelyzer.status
-RUN chown appneta:appneta /var/log/tracelyzer/ssh.status /var/log/tracelyzer/ssh.status.tmp /var/log/tracelyzer/tracelyzer.status
+RUN touch /var/log/tracelyzer/ssh.status /var/log/tracelyzer/ssh.status.tmp /var/log/tracelyzer/tracelyzer.status /tracelyzer.status
+RUN chown -R appneta:appneta /var/log/tracelyzer /tracelyzer.status
 RUN chmod 600 /etc/tracelyzer/auth_client
 
 ADD tracelyzer /opt/tracelyzer/tracelyzer.sh
